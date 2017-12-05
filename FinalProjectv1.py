@@ -1,5 +1,9 @@
 import inPassage
 import simple_example
+import CityScapes
+import Oz
+
+import random
 
 def crossOff(rehearsal_times, dancer_times):
 	"""
@@ -172,7 +176,7 @@ class Scheduler:
 		return True
 
 	
-	def relax_constraints_after(self):
+	def relax_constraints_after(self, randomness):
 	#remove the dancer from the piece with the most dancers
 	#remove dancers who are in a lot of pieces
 		def get_dancer_count(pieces):
@@ -191,13 +195,15 @@ class Scheduler:
 				performer_overlap.append((d, len(overlap)))
 			return performer_overlap
 
-
 		biggest_piece = get_dancer_count(self.pieces)
+		if randomness:
+			if random.random() > 0.4:
+				biggest_piece = random.choice(self.pieces)
+
 		print ('biggest_piece', biggest_piece.choreographer.name)
-		#remove the most contraining dancer, which is the dancer with the smallest overlap
 		overlap = find_most_constraining(biggest_piece)
-		#print ('overlap', overlap)
 		most_constraining_dancer = (min(overlap, key = lambda x: x[1]))[0]
+		
 		print ('most contraining dancer', most_constraining_dancer.name, most_constraining_dancer.availability)
 		biggest_piece.remove_dancer(most_constraining_dancer)
 		self.violations.append((most_constraining_dancer.name, biggest_piece.choreographer.name))
@@ -313,7 +319,7 @@ def relax_constraints_before(problem, invalid_pieces):
 		
 
 
-def solve(dancers, pieces, domain, algorithm):
+def solve(dancers, pieces, domain, algorithm, randomness = False):
 	problem = Scheduler(dancers, pieces, domain)
 	problem.set_initial(pieces, dancers)
 	invalid_pieces = check_empty(problem)
@@ -330,7 +336,7 @@ def solve(dancers, pieces, domain, algorithm):
 	elif algorithm == 'DFS':
 		output = problem.DFS(pieces)
 		while not output:
-			problem.relax_constraints_after()
+			problem.relax_constraints_after(randomness)
 			for p in pieces:
 				print ('dancers in {}'.format(p.choreographer.name), [x.name for x in p.performers])
 			output = problem.DFS(pieces)
@@ -347,11 +353,19 @@ def solve(dancers, pieces, domain, algorithm):
 	for d in dancers:
 		print ("{} has these times scheduled: {}".format(d.name, d.times))
 	print ('violations', problem.violations)
+	return problem
 
-
-#print (inPassage.Sat1)
-solve(inPassage.dancers2, inPassage.pieces2, inPassage.domain, 'DFS')
+#solve(inPassage.dancers2, inPassage.pieces2, inPassage.domain, 'DFS')
 #solve(simple_example.dancers, simple_example.pieces,simple_example.domain,'DFS')
+#solve(CityScapes.dancers, CityScapes.pieces, CityScapes.domain, 'DFS')
+def evaluate(problem):
+	num_violation = len(problem.violations)
+	score = problem.evaluate()
+	print ('violations', num_violation)
+	print ('score', score)
+
+problem = solve(inPassage.dancers2, inPassage.pieces2, inPassage.domain, 'backtracking')
+evaluate(problem)
 
 
 
@@ -360,4 +374,5 @@ solve(inPassage.dancers2, inPassage.pieces2, inPassage.domain, 'DFS')
 #allo hardcoded rehearsal slots
 #get each dancers schedule
 #get random solution
+#implement timer
 #guest choregrapher
