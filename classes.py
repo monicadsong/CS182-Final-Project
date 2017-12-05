@@ -1,3 +1,4 @@
+import copy
 
 class Dancer:
     def __init__(self, name, availability, role):
@@ -18,10 +19,12 @@ class Dancer:
 	'''
 
 class Rehearsal:
-	def __init__(self, choreographer, performers, slot = None):
-		"""Initializes the data."""
-		self.choreographer = choreographer
-		#set the available times for the choreographer to the 
-		self.times = choreographer.availability
-		self.performers = performers
-		self.slot = slot
+    def __init__(self, choreographer, performers, domains, slot = None):
+        self.choreographer = choreographer
+        #set the available times for the choreographer to the 
+        self.times = [x for x in choreographer.availability if x in domains]
+        self.performers = performers
+        self.slot = slot
+
+    def remove_dancer(self, performer):
+        self.performers.remove(performer)
