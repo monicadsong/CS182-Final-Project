@@ -15,12 +15,13 @@ def crossOff(rehearsal_times, dancer_times):
    
 
 class Scheduler:
-	def __init__(self, dancers, pieces):
+	def __init__(self, dancers, pieces, violations = []):
 		#all dancers
 		self.dancers = dancers
 		self.pieces = pieces
+		self.violations = violations
 
-	def set_initial(self, pieces, dancers):
+
 		for p in pieces:
 			for d in p.performers:
 				#wow big mistake
@@ -38,6 +39,37 @@ class Scheduler:
 				if p.slot in x.times:
 					x.times.remove(p.slot)
 
+	def remove(self, choreographer, dancer):
+		for p in self.pieces:
+			if p.choreographer.name == choreographer:
+				print ('FOUND')
+				p.performers.remove(dancer)
+				break
+		self.set_initial(self.pieces, self.dancers)
+		print ('p.name', p.choreographer.name)
+		print ('p.times', p.times)
+		return p.times
+	
+
+	
+
+	def relax_constraints_before(self, invalid_pieces):
+
+	#remove dancers with very few time slots (indication that they are busy)
+		print ('invalid_pieces', [p.choreographer.name for p in invalid_pieces])
+		for p in invalid_pieces: 
+			dancer_counts = []
+			for dancer in p.performers:
+				dancer_counts.append((dancer, len(dancer.availability)))
+			print ('dancer_counts', [x[1] for x in dancer_counts])
+			while not p.times: 
+				print ('iteration')
+				busiest_dancer = (min(dancer_counts, key = lambda x: x[1]))
+				self.remove(p.choreographer.name, busiest_dancer[0])
+				dancer_counts.remove(busiest_dancer)
+				self.violations.append((dancer.name, p.choreographer.name))
+				
+				print ('p.perfomers', [x.name for x in p.performers])
 
 	# USING HEURISTIC
 	def assign_backtracking(self, pieces):
@@ -160,7 +192,8 @@ class Scheduler:
 			self.assign_solution(s)
 			sol_scores.append((s, self.evaluate()))
 		#get minimum score solution
-		best = min(sol_scores, key=lambda x: x[0])[1]
+		best = min(sol_scores, key=lambda x: x[0])[0]
+		print ('best',best)
 		self.assign_solution(best)
 
 
@@ -174,24 +207,26 @@ class Scheduler:
 
 
 	def assign_solution(self, solution):
-		for p, time in zip(pieces, solution):
+		for p, time in zip(self.pieces, solution):
 			p.slot = time
-		for d in dancers:
+		for d in self.dancers:
 			d.times = []
-			for p in pieces:
+			for p in self.pieces:
 			#print ("p", p)
 				if d in p.performers:
 					d.times.append(p.slot)
+		
 
 	def set_slots(self):
-		for d in dancers:
+		for d in self.dancers:
 			d.times = []
 			d.pieces = []
-			for p in pieces:
+			for p in self.pieces:
 			#print ("p", p)
 				if d in p.performers:
 					d.times.append(p.slot)
-					p.pieces.append(p.choreographer.name)
+					d.pieces.append(p.choreographer.name)
+			d.times.sort()
 
 	def evaluate(self):
 
@@ -201,9 +236,9 @@ class Scheduler:
 		nonharvard_score = 0
 		#check for dinner breaks
 		dinner_score = 0
-		#check for super late days (11 pm)
+		#check for super late rehearsals (11 pm)
 		late_score = 0
-		for d in dancers:
+		for d in self.dancers:
 			if d.role == 'nonharvard':
 				days = [x.split('.')[0] for x in d.times]
 				if len(set(days)) > 1:
@@ -211,21 +246,64 @@ class Scheduler:
 				#minimize the time difference
 				for i,t in enumerate(d.times[:1]):
 					if t.split('.')[0] == d.times[i+1].split('.')[0]:
-						if abs(t.split('.')[1] - d.times[i+1].split('.')[1]) > 2:
+						if abs(int(t.split('.')[1]) - int(d.times[i+1].split('.')[1])) > 2:
 							nonharvard_score += 1
+			hours = [int(x.split('.')[1]) for x in d.times]
+			#print (hours)
+			if 5 in hours and 6 in hours:
+				print ('dancer dinner', d.name)
+				dinner_score += 2
 
-			if 5 and 6 in d.times:
-				dinner_score += 1
-		for s in solution:
-			if s > 10:
+		times = [int(p.slot.split('.')[1]) for p in self.pieces]
+		for t in times:
+			if t > 10:
 				late_score += 1
 
 		return nonharvard_score + dinner_score + late_score
 
 
+
+
+
+def has_slot(problem):
+	no_slots = []
+	for p in problem.pieces:
+		if not p.slot:
+			no_slots.append(p)
+	return no_slots
+
+def get_dancer_count(pieces):
+	counts = []
+	for p in pieces:
+		len(p.performers)
+
+def check_empty(problem):
+	empty_domain = []
+	for p in problem.pieces:
+		if not p.times:
+			empty_domain.append(p)
+	return empty_domain
+
+
+
+
+	#return violations
+
+
+
+
+def relax_constraints_after(problem):
+	#remove the dancer from the piece with the most dancers
+	#remove dancers who are in a lot of pieces
+	pass
+
 def solve(dancers, pieces, algorithm):
 	problem = Scheduler(dancers, pieces)
 	problem.set_initial(pieces, dancers)
+	invalid_pieces = check_empty(problem)
+	if invalid_pieces:
+		problem.relax_constraints_before(invalid_pieces)
+
 	if algorithm == 'naive':
 		problem.set_times(pieces)
 
@@ -235,6 +313,7 @@ def solve(dancers, pieces, algorithm):
 	elif algorithm == 'DFS':
 		problem.DFS(pieces)
 
+	problem.set_slots()
 
 	for p in pieces:
 		if p.slot:
@@ -242,10 +321,8 @@ def solve(dancers, pieces, algorithm):
 		else:
 			print ("Unable to assign time slot to {} rehearsal".format(p.choreographer.name))
 	#get each dancer's schedule
-	problem.set_slots()
+
 	for d in dancers:
-		d.pieces = problem.get_dancer_times(d, pieces)
-		d.times = [x.slot for x in d.pieces]
 		print ("{} has these times scheduled: {}".format(d.name, d.times))
 
 
