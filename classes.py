@@ -28,3 +28,7 @@ class Rehearsal:
 
     def remove_dancer(self, performer):
         self.performers.remove(performer)
+
+    def remove_time(self, time):
+        self.times.remove(time)
+

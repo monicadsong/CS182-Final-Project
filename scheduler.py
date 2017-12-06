@@ -7,8 +7,6 @@ import helper
 import random
 
 
-   
-
 class Scheduler:
 	def __init__(self, dancers, pieces, domain, violations = []):
 		#all dancers
