@@ -4,7 +4,7 @@ import CityScapes
 import Oz
 
 import helper
-import random
+import random, sys, timeit
 
 
 class Scheduler:
@@ -37,8 +37,6 @@ class Scheduler:
 	
 	# USING HEURISTIC
 	def assign_backtracking(self, pieces):
-
-	
 		ordered = helper.order(pieces)
 		names = [x.choreographer.name for x in ordered]
 		print ("the order of assignments is {}".format(names))
@@ -146,7 +144,7 @@ class Scheduler:
 	
 			#print ('score', score)
 		#get minimum score solution
-		print ('sol_scores', [x[1] for x in sol_scores])
+		#print ('sol_scores', [x[1] for x in sol_scores])
 		best = min(sol_scores, key=lambda x: x[1])[0]
 		#best_set = [x for x in sol_scores if ]
 		#print ('sol_scores', [x[1] for x in sol_scores])
@@ -176,7 +174,7 @@ class Scheduler:
 
 		biggest_piece = get_dancer_count(self.pieces)
 		if randomness:
-			if random.random() > 0.4:
+			if random.random() > 0.5:
 				biggest_piece = random.choice(self.pieces)
 
 		#print ('biggest_piece', biggest_piece.choreographer.name)
@@ -312,19 +310,14 @@ def solve(dancers, pieces, domain, algorithm, randomness = False):
 		output = problem.assign_backtracking(pieces)
 		while not output:
 			problem.relax_constraints_after(randomness)
-			#for p in pieces:
-				#print ('dancers in {}'.format(p.choreographer.name), [x.name for x in p.performers])
 			output = problem.assign_backtracking(pieces)
-		#for p in pieces:
-			#print ('p.times', p.times)
+
 
 
 	elif algorithm == 'DFS':
 		output = problem.DFS(pieces)
 		while not output:
 			problem.relax_constraints_after(randomness)
-			#for p in pieces:
-				#print ('dancers in {}'.format(p.choreographer.name), [x.name for x in p.performers])
 			output = problem.DFS(pieces)
 
 	problem.set_slots()
@@ -334,36 +327,49 @@ def solve(dancers, pieces, domain, algorithm, randomness = False):
 			print ("the assigned time for {} piece is {}".format(p.choreographer.name, p.slot))
 		else:
 			print ("Unable to assign time slot to {} rehearsal".format(p.choreographer.name))
-	#get each dancer's schedule
-	#print ('hello')
+
 	for d in dancers:
 		print ("{} has these times scheduled: {}".format(d.name, d.times))
-	print ('violations', problem.violations)
-	return problem
 
-#solve(inPassage.dancers2, inPassage.pieces2, inPassage.domain, 'DFS')
-#solve(simple_example.dancers, simple_example.pieces,simple_example.domain,'DFS')
-#solve(CityScapes.dancers, CityScapes.pieces, CityScapes.domain, 'DFS')
-def evaluate(problem):
-	num_violation = len(problem.violations)
-	score = problem.evaluate()
-	print ('violations', num_violation)
-	print ('score', score)
+	print ('This solution has {} violations'.format(len(problem.violations)))
+	if problem.violations:
+		for v in problem.violations:
+			print ("{} cannot attend {}'s piece".format(v[0], v[1]))
+	#return problem
 
-#problem = solve(Oz.dancers, Oz.pieces2, Oz.domain3, 'DFS')
-#problem = solve(Oz.dancers, Oz.pieces2, Oz.domain3, 'backtracking')
-problem = solve(CityScapes.dancers, CityScapes.pieces, CityScapes.domain, 'DFS')
-evaluate(problem)
+
+#python scheduler.py simple DFS
+
+
+if __name__ == '__main__':
+	datasets = {
+	'Oz' : [Oz.dancers, Oz.pieces2, Oz.domain3],
+	'InPassage': [inPassage.dancers2, inPassage.pieces2, inPassage.domain],
+	'CityScapes': [CityScapes.dancers, CityScapes.pieces, CityScapes.domain], 
+	'simple':[simple_example.dancers, simple_example.pieces,simple_example.domain]
+	}
+
+	args = sys.argv[1:]
+	show = args[0]
+	algorithm = args[1]
+	if show in datasets:
+		dancers = datasets[show][0]
+		pieces = datasets[show][1]
+		domain = datasets[show][2]
+		solve(dancers,pieces, domain, algorithm)
+	else:
+		print ('Show not found')
+
 
 
 
 
 #evaluate branching factor
+#fix pre relaxing
 #allo hardcoded rehearsal slots
 #get random solution
 #define better solution function
 #evaluate heuristic
 #implement timer
-#implement the terminal input
 #guest choregrapher
 #implement randomness
