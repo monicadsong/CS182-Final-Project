@@ -48,8 +48,24 @@ Arlesia = Rehearsal(arlesia, [theresa, melanie, maya], domain)
 Anna_A = Rehearsal(anna_a, [phoebe, allenda, violet], domain)
 Anna_RS = Rehearsal(anna_rs, [], domain)
 
-dancers2 = [phoebe, lia, sarah, arlesia, anna_a, anna_rs, julia_s, lilly_s, emily, violet, maryelizabeth, nicole,  melanie, maya, theresa, allenda, jesse]
-pieces2 = [Jesse, Phoebe, Lia, Sarah, Arlesia, Anna_A, Anna_RS]
+dancers = [phoebe, lia, sarah, arlesia, anna_a, anna_rs, julia_s, lilly_s, emily, violet, maryelizabeth, nicole,  melanie, maya, theresa, allenda, jesse]
+pieces = [Jesse, Phoebe, Lia, Sarah, Arlesia, Anna_A, Anna_RS]
+
+
+actual = {
+	Jesse: Mon9,
+	Phoebe: Tues4,
+	Lia: Mon7,
+	Sarah: Tues5,
+	Arlesia: Mon8,
+	Anna_A: Tues6,
+	Anna_RS: Mon9
+}
+
+
+
+
+
 
 
 

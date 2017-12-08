@@ -37,8 +37,21 @@ Anna_RS2 = Rehearsal(anna_rs, [neta, alex], domain3)
 Margaret2 = Rehearsal(margaret, [ali, neta], domain3)
 
 
-pieces2 = [Alex, Margot, Ali,Anna_A,  Nina,  Anna_RS, Margaret, Alex2, Margot2, Ali2,Anna_A2,  Nina2,  Anna_RS2, Margaret2]
-
+pieces = [Alex, Margot, Ali,Anna_A,  Nina,  Anna_RS, Margaret, Alex2, Margot2, Ali2,Anna_A2,  Nina2,  Anna_RS2, Margaret2]
 dancers = [monica, alex, margot, ali, anna_a, nina, anna_rs, margaret, jonah, lilly, julia, phoebe, sarah, neta]
-pieces = [Alex, Margot, Ali,Anna_A,  Nina,  Anna_RS, Margaret]
+actual = {Alex: t7,
+Margot: s2, 
+Ali: m7,
+Anna_A: m9,
+Nina: s9,  
+Anna_RS: s8, 
+Margaret: t9, 
+Alex2: t6, 
+Margot2: m6, 
+Ali2: m8,
+Anna_A2: m10, 
+Nina2: s10,  
+Anna_RS2: s8, 
+Margaret2: t10}
+
 

@@ -4,6 +4,7 @@ import CityScapes
 import Oz
 
 import helper
+import Tree
 import random, sys, math
 
 
@@ -17,8 +18,7 @@ class Scheduler:
 	def set_initial(self, pieces, dancers):
 		for p in pieces:
 			for d in p.performers:
-				#p.times, d.constraint_weights[p] = helper.crossOff(p.times, d.availability)
-				p.times, d.constraint_weights[p] = helper.crossOff(p.times, d.availability)
+				p.times = helper.crossOff(p.times, d.availability)
 		
 	def set_times(self, pieces):
 		#iterate through the remaining times in each rehearsal
@@ -32,7 +32,7 @@ class Scheduler:
 					x.times.remove(p.slot)
 		return True
 	
-	# USING HEURISTIC
+	#USING HEURISTIC
 	def heuristic(self, pieces):
 		ordered = helper.order(pieces)
 		names = [x.choreographer.name for x in ordered]
@@ -47,7 +47,6 @@ class Scheduler:
 				LCV = min(values, key=lambda x: x[1])
 				MRV.slot = LCV[0]
 				if helper.check(ordered, MRV.slot):
-					#print ('{} is assigned to {}'.format(MRV.choreographer.name, MRV.slot))
 					for x in ordered:
 						if MRV.slot in x.times:
 							x.remove_time(MRV.slot)
@@ -63,47 +62,10 @@ class Scheduler:
 						return False
 		return True
 
-
+	#DEPTH FIRST SEARCH
 	def DFS(self, pieces):
-		
-		def makeTree(pieces):
-
-			class Node:
-			    def __init__(self, name, time, successors = None, path = []):
-			        self.name = name
-			        self.time = time
-			        self.successors = successors
-			        self.path = path
-
-			    def add_path(self, old_path, node):
-			        self.path = old_path[:]
-			        self.path.append(node.time)
-
-			    def add_successors(self, successors):
-			        self.successors = successors
-
-			#DO WE EVEN NEED A HEURISITC TO ORDER THE TREE?
-			#create start node
-			start = Node('start', None)
-			current = [start]
-			#order the domain 
-			ordered = helper.time_counts(pieces)
-			number_nodes = 1
-			for p in helper.order(pieces):
-				successors = []
-				times = sorted(p.times, key = lambda x: ordered[x])
-				for t in times:
-					new_node = Node(p.choreographer, t)
-					successors.append(new_node)
-				for c in current:
-					c.add_successors(successors)
-				number_nodes *= len(successors)
-				current = successors
-			print ('This tree has a total of {} nodes to explore'.format(number_nodes))
-			return start
-
-
-		start_node = makeTree(pieces)
+		#make search tree
+		start_node = Tree.makeTree(pieces)
 		if not start_node:
 			return False
 		solutions = []
@@ -130,22 +92,10 @@ class Scheduler:
 				sol_scores.append((vertex.path, score))
 
 		if not solutions:
-			#for i,s in enumerate(solutions):
-				#print ("Solution {}: {}".format(i, s))
 			print ('no valid assignment found')
 			return False
 
-
-		#return solutions
-
-		#rate solutions
-		
-		#print ('sol_scores', [x[1] for x in sol_scores])
 		best = max(sol_scores, key=lambda x: x[1])[0]
-		#best_set = [x for x in sol_scores if ]
-		#print ('sol_scores', [x[1] for x in sol_scores]) ### NEED TO IMPLEMENT THIS
-		#print ('best',best)
-		#self.assign_solution(best)
 		self.set_slots(solution = best)
 		return True
 
@@ -156,13 +106,11 @@ class Scheduler:
 				if p.slot not in d.availability:
 					self.violations.append((d.name,p))
 
-
-
-	def random(self, pieces):
-
+	def random_SA(self, pieces):
 		#reset
 		for p in pieces:
 			p.times = p.choreographer.availability
+
 		#assign times randomly as start
 		ordered = helper.order(pieces)
 		for i, p in enumerate(ordered):
@@ -170,39 +118,28 @@ class Scheduler:
 			for x in ordered[i+1:]:
 				if p.slot in x.times:
 					x.times.remove(p.slot)
-
 		self.set_slots()
 		self.get_violations()
 
-
-		def get_available_times(piece):
-			times = piece.choreographer.availability
-			for p in pieces:
-				if p.slot in times:
-					times.remove(p.slot)
-			return times
-
-		#change to minimum conflict heuristics
-
 		def assign_to_neighbor(piece):
-			neighbor_times = get_available_times(piece)
-			if neighbor_times:
-				rand = random.choice(neighbor_times)
-				piece.slot = rand
+			slot = helper.get_min_conflict_time(self,piece)
+			if slot:
+				piece.slot = slot
 
 		def run(T, schedule):
 			accepted = []
 			while T > 1:
-				current_value = self.evaluate() - len(self.violations)
+				current_value = len(self.violations)
+				if current_value == 0:
+					return True
 				rand_piece = random.choice(self.violations)[1]
 				old = rand_piece.slot
 				assign_to_neighbor(rand_piece)
 				self.set_slots()
 				self.get_violations()
-				print ('violations',len(self.violations))
-				new_value = self.evaluate() - len(self.violations)
-				delta = new_value - current_value
-				if delta >= 0:
+				new_value = len(self.violations)
+				delta = -(new_value - current_value)
+				if delta > 0:
 					accepted.append(new_value)
 				else:
 					if random.random() < math.exp(delta / float(T)):
@@ -211,61 +148,35 @@ class Scheduler:
 						rand_piece.slot = old
 						self.set_slots()
 						self.get_violations()
+			
 				T *= schedule
 			print (accepted)
 
-		run(10000, 0.95)
+		run(10000, 0.90)
 		return True
 
-
-
-	#def run(T, schedule):
-
-
-
-
-
-
-
-
-	
 	def relax_constraints_after(self, randomness):
-	#remove the dancer from the piece with the most dancers
-	#remove dancers who are in a lot of pieces
-		def get_dancer_count(pieces):
-			counts = []
-			for p in pieces:
-				counts.append((p, len(p.performers)))
-			#return counts
-			return (max(counts, key = lambda x: x[1]))[0]
 
-		def find_most_constraining(piece):
-			#count the overlap between the choreographer's availabiity and the dancer's availabiity
-			performer_overlap = []
-			for d in piece.performers:
-				overlap = list(set(d.availability).intersection(piece.choreographer.availability))
-				performer_overlap.append((d, len(overlap)))
-			return performer_overlap
-
-		biggest_piece = get_dancer_count(self.pieces)
+		size_domains = [(len(p.times),p) for p in self.pieces]
+		MRV = min(size_domains, key = lambda x: x[0])[1]
 		if randomness:
 			if random.random() > 0.8:
-				biggest_piece = random.choice(self.pieces)
+				MRV = random.choice(self.pieces)
 
-		overlap = find_most_constraining(biggest_piece)
-		most_constraining_dancer = (min(overlap, key = lambda x: x[1]))[0]
-		
-		biggest_piece.remove_dancer(most_constraining_dancer)
-		self.violations.append((most_constraining_dancer.name, biggest_piece))
-		biggest_piece.times = [x for x in biggest_piece.choreographer.availability if x in self.domain]
+		most_constraining_dancer = helper.find_most_constraining(MRV)
+		MRV.remove_dancer(most_constraining_dancer)
+		self.violations.append((most_constraining_dancer.name, MRV))
+		MRV.times = [x for x in MRV.choreographer.availability if x in self.domain]
 		self.set_initial(self.pieces, self.dancers)
 
-		#remove the most contraining dancer from the dancer with the most pieces
-
-	def set_slots(self, solution = None):
+	def set_slots(self, solution = None, actual = None):
 		if solution: 
-			for p, time in zip(self.pieces, solution):
+			for p, time in zip(helper.order(self.pieces), solution):
 				p.slot = time
+		if actual:
+			for p in self.pieces:
+				#print (p.choreographer.name)
+				p.slot = actual[p]
 		for d in self.dancers:
 			d.times = []
 			d.pieces = []
@@ -289,7 +200,7 @@ class Scheduler:
 			if d.role == 'nonharvard':
 				days = [x.split('.')[0] for x in d.times]
 				if len(set(days)) == 1:
-					nonharvard_score -= 3
+					nonharvard_score += 3
 				#minimize the time difference
 			ind_score = 0
 			if d.times:
@@ -307,115 +218,21 @@ class Scheduler:
 		late = [x for x in times if x > 10]
 		if not late:
 			late_score += 1
-			
-
 		return nonharvard_score + dinner_score + late_score + cluster_score
 
 
-def check_empty(problem):
-	empty_domain = []
-	for p in problem.pieces:
-		if not p.times:
-			empty_domain.append(p)
-	return empty_domain
-
-
 def relax_constraints_before(problem, invalid_pieces):
-
-#remove dancers with very few time slots (indication that they are busy)
+#remove dancers with smallest overlap
 	for p in invalid_pieces: 
-		#print ('invalid p', p.choreographer.name)
 		if p.performers:
-			dancer_counts = []
-			for dancer in p.performers:
-				dancer_counts.append((dancer, len(dancer.availability)))
-			#is_empty = check_empty(problem)
 			while not p.times:
-				busiest_dancer = (min(dancer_counts, key = lambda x: x[1]))
-				p.remove_dancer(busiest_dancer[0])
-				dancer_counts.remove(busiest_dancer)
-				problem.violations.append((busiest_dancer[0].name, p))
+				most_constraining_dancer = helper.find_most_constraining(p)
+				p.remove_dancer(most_constraining_dancer)
+				problem.violations.append((most_constraining_dancer.name, p))
 				p.times = [x for x in p.choreographer.availability if x in problem.domain]
-				#problem = Scheduler(problem.dancers, problem.pieces, problem.violations)
-				#print ('len dancers',len(problem.dancers))
 				problem.set_initial(problem.pieces, problem.dancers)
 		else:
 			p.choreographer.availability = problem.domain
 			p.times = p.choreographer.availability
 			problem.set_initial(problem.pieces, problem.dancers)
 		
-
-
-def solve(dancers, pieces, domain, algorithm, randomness = False):
-
-
-	#you can curry functoins
-	problem = Scheduler(dancers, pieces, domain)
-	problem.set_initial(pieces, dancers)
-	invalid_pieces = check_empty(problem)
-	if invalid_pieces:
-		relax_constraints_before(problem, invalid_pieces)
-		print ("num of violations", len(problem.violations))
-
-
-	algo = {
-	'naive': problem.set_times,
-	'heuristic': problem.heuristic,
-	'DFS': problem.DFS,
-	'random': problem.random
-	}
-	def eval(function, *args):
-		return (function(*args))
-
-	output = eval(algo[algorithm], pieces)
-	while not output:
-		problem.relax_constraints_after(randomness)
-		output = eval(algo[algorithm], pieces)
-
-	problem.set_slots()
-	score = problem.evaluate()
-
-	for p in pieces:
-		if p.slot:
-			print ("the assigned time for {} piece is {}".format(p.choreographer.name, p.slot))
-		else:
-			print ("Unable to assign time slot to {} rehearsal".format(p.choreographer.name))
-
-	for d in dancers:
-		print ("{} has these times scheduled: {}".format(d.name, d.times))
-
-	print ('This solution has {} violations'.format(len(problem.violations)))
-	if problem.violations:
-		for v in problem.violations:
-			print ("{} cannot attend {}'s piece at {}".format(v[0], v[1].choreographer.name, v[1].slot))
-	print ('Score: {}'.format(score))
-
-if __name__ == '__main__':
-	datasets = {
-	'Oz' : [Oz.dancers, Oz.pieces2, Oz.domain3],
-	'InPassage': [inPassage.dancers2, inPassage.pieces2, inPassage.domain],
-	'CityScapes': [CityScapes.dancers, CityScapes.pieces, CityScapes.domain], 
-	'simple':[simple_example.dancers, simple_example.pieces,simple_example.domain]
-	}
-
-	args = sys.argv[1:]
-	show = args[0]
-	algorithm = args[1]
-	if show in datasets:
-		dancers = datasets[show][0]
-		pieces = datasets[show][1]
-		domain = datasets[show][2]
-		solve(dancers,pieces, domain, algorithm)
-	else:
-		print ('Show not found')
-
-#relax constraints differentlyl
-#fix pre relaxing-- !!!!
-
-#changing variables randomly
-#get random solution
-#define better solution function
-#evaluate heuristic
-#use simulated annealing to maximize
-
-#implement randomness

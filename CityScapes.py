@@ -1,7 +1,7 @@
 from classes import Dancer, Rehearsal
 from timeslot_vars import *
- 
-domain = [m4, m5, m8, m9, m10, m11, t6, t7, t8, t9, t10, t11]
+
+domain = [m4, m5, m8, m9, m10, t6, t7, t8, t9, t10]
 
 monica = Dancer('Monica', [m4, m5, m6, m7, m8, m9, m10, m11, t6, t7, t8, t9, t10, t11, w5, w6, w7, w8, w9, w10],'dancer')
 emma = Dancer('Emma', [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11,m4, m5, m6, m7, m8, m9, m10, m11, t6, t7, t8, t9, 
@@ -46,8 +46,18 @@ Michelle = Rehearsal(michelle, [neta], domain)
 dancers = [monica, emma, anna_a, miriam, hazel, phoebe, arlesia, laura, sarah, neta, michelle, maryelizabeth, talia, florence, violet, lilly, nicole, emily]
 pieces = [Emma, Anna_A, Miriam, Hazel, Phoebe, Arlesia, Laura, Sarah, Neta, Michelle]
 
-
-
+actual = {
+Emma: m4,
+Anna_A: t10,
+Miriam: t9,
+Hazel: t7,
+Phoebe: m9,
+Arlesia: m10,
+Laura: t8,
+Sarah: m5,
+Neta: t6,
+Michelle: m9
+}
 
 
 

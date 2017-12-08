@@ -7,17 +7,6 @@ class Dancer:
         self.availability = availability
         self.role = role
         self.constraint_weights = {}
-        #self.times = self.get_dancer_times(performances)
-        
-    '''
-    def get_dancer_times(self, performances):
-        times = []
-        for p in performances:
-            for perf in p.performers:
-                if self.name == perf.name:
-                    times.append(p.choreographer.name)
-        return times
-	'''
 
 class Rehearsal:
     def __init__(self, choreographer, performers, domains, slot = None):
