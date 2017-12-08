@@ -3,9 +3,14 @@
 ## A CSP-Based Rehearsal Scheduler
 ### Monica Song, monicasong@college.harvard.edu
 
+**Note: code is written in Python3**
+
 To run the scheduler, type: 
 `python solver.py <show> <algorithm>`
 where `<show>` can be `InPassage`, `Oz`, or `CityScapes` and `<algorithm>` can be `DFS`, `heuristic`, or `random`.
+
+An example command:
+`python solver.py <Oz> <heuristic>`
 
 To evaluate an existing tech week, type:
 `python eval_solution.py <show>`
