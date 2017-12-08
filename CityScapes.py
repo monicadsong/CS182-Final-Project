@@ -1,6 +1,6 @@
 from classes import Dancer, Rehearsal
 from timeslot_vars import *
-
+ 
 domain = [m4, m5, m8, m9, m10, m11, t6, t7, t8, t9, t10, t11]
 
 monica = Dancer('Monica', [m4, m5, m6, m7, m8, m9, m10, m11, t6, t7, t8, t9, t10, t11, w5, w6, w7, w8, w9, w10],'dancer')

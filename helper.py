@@ -5,10 +5,12 @@ def crossOff(rehearsal_times, dancer_times):
 	#dancer times is a list of dancer's available times
 	#rehearsa times is the list of the choreographer's available times
 	new_rehearsal_times = rehearsal_times[:]
+	constraint_weight = 0
 	for r in rehearsal_times:
 		if r not in dancer_times:
 			new_rehearsal_times.remove(r)
-	return new_rehearsal_times
+			constraint_weight += 1
+	return (new_rehearsal_times, constraint_weight)
 #arc consistency check if no legal values remain in rest of pieces
 def check(pieces, slot):
 	for p in pieces:

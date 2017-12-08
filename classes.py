@@ -6,6 +6,7 @@ class Dancer:
         self.name = name
         self.availability = availability
         self.role = role
+        self.constraint_weights = {}
         #self.times = self.get_dancer_times(performances)
         
     '''
