@@ -1,6 +1,12 @@
+import inPassage
+import simple_example
+import CityScapes
+import Oz
+
+
 from scheduler import *
 import helper
-import random, sys, math
+import sys
 
 
 def solve(dancers, pieces, domain, algorithm, randomness = False):

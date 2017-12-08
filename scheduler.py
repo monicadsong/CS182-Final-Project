@@ -1,11 +1,7 @@
-import inPassage
-import simple_example
-import CityScapes
-import Oz
 
 import helper
 import Tree
-import random, sys, math
+import random, math
 
 
 class Scheduler:

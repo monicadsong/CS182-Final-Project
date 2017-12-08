@@ -1,5 +1,3 @@
-import copy
-
 class Dancer:
     def __init__(self, name, availability, role):
         #Initializes the data

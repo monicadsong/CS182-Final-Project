@@ -3,9 +3,7 @@ import simple_example
 import CityScapes
 import Oz
 from scheduler import *
-import helper
-import random, sys, math
-
+import sys
 
 def eval(dancer, pieces, domain, solution):
 	problem = Scheduler(dancers, pieces, domain)
